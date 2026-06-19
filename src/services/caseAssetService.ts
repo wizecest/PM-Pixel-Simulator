@@ -1,4 +1,4 @@
-import type { ShareableCaseOutput } from "@/types/simulation";
+import type { ShareableCaseOutput, ShareableOutputType } from "@/types/simulation";
 
 export interface ShareableOutputSource {
   projectName?: string;
@@ -34,8 +34,76 @@ function uniqueByTitle(outputs: ShareableCaseOutput[]) {
   });
 }
 
+function uniqueByOutputType(outputs: ShareableCaseOutput[]) {
+  const usedTypes = new Set<ShareableOutputType>();
+  return outputs.filter((output) => {
+    if (!output.outputType || usedTypes.has(output.outputType)) {
+      return false;
+    }
+    usedTypes.add(output.outputType);
+    return true;
+  });
+}
+
 function isTemplatePackage(output: ShareableCaseOutput) {
   return output.title.includes("模板");
+}
+
+const workOutputOrder: ShareableOutputType[] = [
+  "meeting_notice",
+  "meeting_minutes",
+  "responsibility_table",
+  "reminder_record",
+  "reporting_brief",
+  "archive_checklist",
+  "review_checklist",
+];
+
+export const workOutputTypeLabels: Record<ShareableOutputType, string> = {
+  meeting_notice: "专题会通知",
+  meeting_minutes: "专题会议纪要",
+  responsibility_table: "责任节点表",
+  reminder_record: "催办记录",
+  reporting_brief: "上报口径",
+  archive_checklist: "资料归档清单",
+  review_checklist: "报审附件核对表",
+};
+
+function inferOutputType(output: ShareableCaseOutput): ShareableOutputType | undefined {
+  const text = `${output.title}\n${output.usage}\n${output.content}`;
+
+  if (text.includes("会议通知") || text.includes("专题会通知")) {
+    return "meeting_notice";
+  }
+  if (text.includes("会议纪要")) {
+    return "meeting_minutes";
+  }
+  if (text.includes("责任节点") || text.includes("责任表")) {
+    return "responsibility_table";
+  }
+  if (text.includes("催办") || text.includes("任务单")) {
+    return "reminder_record";
+  }
+  if (text.includes("上报") || text.includes("汇报口径")) {
+    return "reporting_brief";
+  }
+  if (text.includes("归档")) {
+    return "archive_checklist";
+  }
+  if (text.includes("报审") || text.includes("附件核对")) {
+    return "review_checklist";
+  }
+
+  return undefined;
+}
+
+function withWorkMetadata(output: ShareableCaseOutput, outputType: ShareableOutputType): ShareableCaseOutput {
+  return {
+    ...output,
+    outputType,
+    copyLabel: output.copyLabel || `复制${workOutputTypeLabels[outputType]}`,
+    workScenario: output.workScenario || "复制到项目推进、会议组织、报审归档等实际工作场景",
+  };
 }
 
 export function buildCaseTemplatePackageOutput(source: ShareableOutputSource): ShareableCaseOutput {
@@ -124,4 +192,85 @@ export function normalizeShareableOutputs(outputs: unknown, source: ShareableOut
   );
 
   return [...nonTemplateOutputs.slice(0, 3), templatePackage];
+}
+
+function buildFallbackWorkOutputs(source: ShareableOutputSource): ShareableCaseOutput[] {
+  const project = source.projectName || source.caseName || "项目";
+  const problem = source.currentProblem || source.exposedProblems?.[0] || "当前项目管理问题";
+  const proposedAction = source.proposedAction || "原推进方案偏向沟通或催办，需要补充责任、节点、成果和闭环要求";
+  const parties = source.involvedParties || "项目负责人、设计管理人员、前期报批人员、服务单位、资料档案人员";
+  const exposedProblems = source.exposedProblems?.length ? source.exposedProblems.join("、") : "责任、节点、成果、风险和闭环留痕不够清晰";
+
+  return [
+    withWorkMetadata(
+      {
+        title: "专题会通知",
+        usage: "适合复制到群通知或会议邀请",
+        content: `【专题会通知】\n会议主题：${project}${problem}闭环协调会\n会议时间：今日 15:00\n参会人员：${parties}\n会议目标：围绕“${problem}”明确责任人、完成时间、输出成果、检查人和销项依据。\n会前准备：\n1. 请服务单位准备现有成果、未完成事项和需协调问题。\n2. 请项目负责人准备原推进方案“${proposedAction}”及当前节点偏差说明。\n3. 请资料档案人员准备需补充留痕的材料清单。\n会议输出：《专题会议纪要》《责任节点表》《资料归档清单》。`,
+      },
+      "meeting_notice",
+    ),
+    withWorkMetadata(
+      {
+        title: "专题会议纪要",
+        usage: "适合复制为会后纪要初稿",
+        content: `【专题会议纪要】\n会议主题：${project}${problem}闭环协调会\n参会人员：${parties}\n\n一、会议背景\n${project}推进中出现“${problem}”，原推进方案为“${proposedAction}”。复盘暴露问题包括：${exposedProblems}。\n\n二、会议结论\n1. 将该事项纳入项目问题闭环管理，今日形成责任节点安排。\n2. 服务单位需提交正式成果或逐条说明无法完成原因。\n3. 项目负责人负责节点跟踪，设计管理人员负责成果复核，资料档案人员负责过程留痕。\n4. 若关键节点未按期完成，由项目负责人当天上报偏差原因和需协调事项。\n\n三、输出成果\n本次会议形成《责任节点表》《催办记录》《资料归档清单》，作为后续复核和销项依据。`,
+      },
+      "meeting_minutes",
+    ),
+    withWorkMetadata(
+      {
+        title: "责任节点表",
+        usage: "适合复制到任务表或项目周跟踪表",
+        content: `| 任务 | 责任人 | 配合人 | 截止时间 | 输出成果 | 检查人 | 未完成处理 |\n| --- | --- | --- | --- | --- | --- | --- |\n| 梳理“${problem}”的处理事项 | 设计管理人员 | 服务单位 | 今日 12:00 前 | 《问题修改清单》 | 项目负责人 | 当日补开协调会确认 |\n| 组织专题协调并压实节点 | 项目负责人 | ${parties} | 今日 15:00 前 | 《专题会议纪要》《责任节点表》 | 分管领导或部门负责人 | 形成书面催办 |\n| 提交正式成果或逐条反馈 | 服务单位 | 设计管理人员 | 明日 18:00 前 | 正式成果、逐条回复表、附件包 | 设计管理人员 | 当天上报偏差原因 |\n| 完成复核、报审准备和销项 | 项目负责人 | 设计管理人员、前期报批人员、资料档案人员 | 本周五 17:00 前 | 复核意见、报审附件包、销项记录 | 分管领导或部门负责人 | 升级协调 |`,
+      },
+      "responsibility_table",
+    ),
+    withWorkMetadata(
+      {
+        title: "催办记录",
+        usage: "适合复制为书面催办或任务提醒",
+        content: `【催办记录】\n催办事项：${project}${problem}处理闭环\n催办对象：服务单位 / 相关责任人\n催办时间：今日\n\n请按专题会要求于明日 18:00 前提交以下材料：\n1. 针对“${problem}”的正式处理成果或逐条无法完成原因。\n2. 对应的附件、依据、版本说明和修改范围。\n3. 需项目方协调的事项清单。\n\n逾期处理：如未按时提交，请在截止当天说明原因、影响节点和补救计划，项目负责人将同步上报节点偏差。`,
+      },
+      "reminder_record",
+    ),
+    withWorkMetadata(
+      {
+        title: "上报口径",
+        usage: "适合复制到日报、周报或领导汇报",
+        content: `【上报口径】\n${project}当前需重点关注“${problem}”。经复盘，原推进方案“${proposedAction}”仍需补强责任、节点、成果和留痕闭环。今日已安排专题协调，明确服务单位提交正式成果，项目负责人跟踪节点偏差，设计管理人员负责复核，资料档案人员补齐过程资料。下一步将在本周五前完成成果复核、报审准备和销项记录；若关键节点延期，将同步上报偏差原因和需协调事项。`,
+      },
+      "reporting_brief",
+    ),
+    withWorkMetadata(
+      {
+        title: "资料归档清单",
+        usage: "适合复制给资料员或作为归档检查项",
+        content: `| 资料名称 | 归档来源 | 归档时间 | 归档责任人 | 备注 |\n| --- | --- | --- | --- | --- |\n| 外部意见或问题来源材料 | 前期报批人员 / 项目负责人 | 今日下班前 | 资料档案人员 | 支撑“${problem}”的依据 |\n| 专题会议纪要 | 项目负责人 | 今日下班前 | 资料档案人员 | 包含责任人、节点和会议结论 |\n| 催办记录 / 任务单 | 项目负责人 | 发生当天 | 资料档案人员 | 用于证明已书面推进 |\n| 正式成果版本 | 服务单位 | 明日 18:00 后 | 资料档案人员 | 保留提交版本和修改说明 |\n| 复核意见和销项记录 | 设计管理人员 / 项目负责人 | 本周五前 | 资料档案人员 | 作为问题闭环依据 |`,
+      },
+      "archive_checklist",
+    ),
+    withWorkMetadata(
+      {
+        title: "报审附件核对表",
+        usage: "适合复制到报审前附件核对流程",
+        content: `| 核对项 | 本案例需确认内容 | 当前状态 | 责任人 | 补齐要求 |\n| --- | --- | --- | --- | --- |\n| 外部意见来源 | “${problem}”对应的意见、依据或通知 | 待归档 | 前期报批人员 | 补齐原件、截图或正式来文 |\n| 正式成果版本 | 服务单位提交的最终修改稿 | 待提交 | 服务单位 | 文件名标注日期、版本和修改范围 |\n| 内部复核意见 | 设计管理人员对成果完整性和口径的复核 | 待复核 | 设计管理人员 | 写明通过、不通过和需补正事项 |\n| 报审附件包 | 报审文本、图纸、估算、说明和相关附件 | 待核对 | 前期报批人员 | 按报审路径逐项打勾确认 |\n| 销项依据 | 会议纪要、催办记录、复核意见和成果版本 | 待汇总 | 项目负责人 | 确认问题已闭环并可追溯 |`,
+      },
+      "review_checklist",
+    ),
+  ];
+}
+
+export function normalizeWorkOutputs(outputs: unknown, source: ShareableOutputSource) {
+  const validOutputs = Array.isArray(outputs) ? outputs.filter(isShareableOutput) : [];
+  const typedOutputs = validOutputs
+    .map((output) => {
+      const outputType = output.outputType || inferOutputType(output);
+      return outputType ? withWorkMetadata(output, outputType) : undefined;
+    })
+    .filter((output): output is ShareableCaseOutput => Boolean(output));
+  const fallbackOutputs = buildFallbackWorkOutputs(source);
+  const orderedOutputs = uniqueByOutputType([...typedOutputs, ...fallbackOutputs]);
+
+  return workOutputOrder.flatMap((outputType) => orderedOutputs.filter((output) => output.outputType === outputType));
 }

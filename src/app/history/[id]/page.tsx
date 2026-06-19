@@ -7,7 +7,9 @@ import { useEffect, useState } from "react";
 import { PixelButton } from "@/components/PixelButton";
 import { PixelCard } from "@/components/PixelCard";
 import { PixelLayout } from "@/components/PixelLayout";
+import { CaseQualityPanel } from "@/components/CaseQualityPanel";
 import { SimulationResultView } from "@/components/SimulationResultView";
+import { auditCaseQuality } from "@/services/caseQualityService";
 import { downloadRecordMarkdown } from "@/services/exportService";
 import { getRecordById } from "@/services/storageService";
 import type { SimulationRecord } from "@/types/simulation";
@@ -47,7 +49,7 @@ export default function HistoryDetailPage() {
             <div className="grid gap-3 text-sm md:grid-cols-2">
               <p>
                 <span className="text-pixel-cyan">项目：</span>
-                {record.input.projectName}
+                {record.input?.projectName || "未填写项目名称"}
               </p>
               <p>
                 <span className="text-pixel-cyan">保存时间：</span>
@@ -55,18 +57,21 @@ export default function HistoryDetailPage() {
               </p>
               <p className="md:col-span-2">
                 <span className="text-pixel-cyan">问题：</span>
-                {record.input.currentProblem}
+                {record.input?.currentProblem || "未填写当前问题"}
               </p>
               <p className="md:col-span-2">
                 <span className="text-pixel-cyan">原方案：</span>
-                {record.input.proposedAction}
+                {record.input?.proposedAction || "未填写原方案"}
               </p>
             </div>
-            <div className="mt-4">
+            <div className="mt-4 flex flex-wrap gap-3">
               <PixelButton type="button" variant="secondary" icon={<Download size={16} />} onClick={() => downloadRecordMarkdown(record)}>
                 导出 Markdown
               </PixelButton>
             </div>
+          </PixelCard>
+          <PixelCard title="推演质量核查" eyebrow="QUALITY">
+            <CaseQualityPanel report={auditCaseQuality(record)} />
           </PixelCard>
           <SimulationResultView result={record} />
         </div>

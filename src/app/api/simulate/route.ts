@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
-import { normalizeShareableOutputs } from "@/services/caseAssetService";
+import { normalizeShareableOutputs, normalizeWorkOutputs } from "@/services/caseAssetService";
+import { normalizeCaseLibraryMeta } from "@/services/caseLibraryService";
 import { buildSimulationPrompt } from "@/services/promptTemplate";
-import type { GenerateSimulationParams, GenerateSimulationResponse } from "@/types/simulation";
+import type { GenerateSimulationParams, GenerateSimulationResponse, ShareableCaseOutput, SimulationRecord } from "@/types/simulation";
 
 type LlmProvider = "openai" | "openai-compatible";
 
@@ -80,20 +81,74 @@ function getProvider(): LlmProvider {
   return process.env.LLM_PROVIDER === "openai-compatible" ? "openai-compatible" : "openai";
 }
 
+function uniqueOutputs(outputs: ShareableCaseOutput[]) {
+  const usedTitles = new Set<string>();
+  const usedTypes = new Set<string>();
+
+  return outputs.filter((output) => {
+    if (usedTitles.has(output.title)) {
+      return false;
+    }
+    if (output.outputType && usedTypes.has(output.outputType)) {
+      return false;
+    }
+
+    usedTitles.add(output.title);
+    if (output.outputType) {
+      usedTypes.add(output.outputType);
+    }
+    return true;
+  });
+}
+
+function buildMetaRecord(
+  result: GenerateSimulationResponse,
+  params: GenerateSimulationParams,
+  shareableOutputs: ShareableCaseOutput[],
+): SimulationRecord {
+  return {
+    id: params.input.id || "preview",
+    input: params.input,
+    selectedSceneId: params.selectedScene.id,
+    selectedRoleIds: params.selectedRoles.map((role) => role.id),
+    simulationSource: result.simulationSource,
+    levelName: result.levelName,
+    riskLevel: result.riskLevel,
+    mainQuest: result.mainQuest,
+    hiddenRisks: result.hiddenRisks,
+    roleResults: result.roleResults,
+    gapScan: result.gapScan,
+    abilityScore: result.abilityScore,
+    actionPlan: result.actionPlan,
+    caseAsset: {
+      ...result.caseAsset,
+      shareableOutputs,
+    },
+    createdAt: new Date().toISOString(),
+  };
+}
+
 function normalizeSimulationResponse(result: GenerateSimulationResponse, params: GenerateSimulationParams): GenerateSimulationResponse {
+  const outputSource = {
+    projectName: params.input.projectName,
+    currentProblem: params.input.currentProblem,
+    proposedAction: params.input.proposedAction,
+    involvedParties: params.input.involvedParties,
+    caseName: result.caseAsset.caseName,
+    exposedProblems: result.caseAsset.exposedProblems,
+    reusableTemplates: result.caseAsset.reusableTemplates,
+  };
+  const shareableOutputs = normalizeShareableOutputs(result.caseAsset.shareableOutputs, outputSource);
+  const workOutputs = normalizeWorkOutputs(result.caseAsset.shareableOutputs, outputSource);
+  const mergedOutputs = uniqueOutputs([...shareableOutputs, ...workOutputs]);
+  const metaRecord = buildMetaRecord(result, params, mergedOutputs);
+
   return {
     ...result,
     caseAsset: {
       ...result.caseAsset,
-      shareableOutputs: normalizeShareableOutputs(result.caseAsset.shareableOutputs, {
-        projectName: params.input.projectName,
-        currentProblem: params.input.currentProblem,
-        proposedAction: params.input.proposedAction,
-        involvedParties: params.input.involvedParties,
-        caseName: result.caseAsset.caseName,
-        exposedProblems: result.caseAsset.exposedProblems,
-        reusableTemplates: result.caseAsset.reusableTemplates,
-      }),
+      libraryMeta: normalizeCaseLibraryMeta(metaRecord),
+      shareableOutputs: mergedOutputs,
     },
   };
 }
@@ -120,7 +175,7 @@ async function callOpenAiResponses(prompt: string, apiKey: string, model: string
         },
       ],
       temperature: 0.4,
-      max_output_tokens: 5000,
+      max_output_tokens: 7000,
     }),
   });
 
@@ -158,7 +213,7 @@ async function callOpenAiCompatibleChat(prompt: string, apiKey: string, model: s
         },
       ],
       temperature: 0.4,
-      max_tokens: 5000,
+      max_tokens: 7000,
     }),
   });
 

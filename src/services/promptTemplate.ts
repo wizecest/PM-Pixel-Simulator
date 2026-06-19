@@ -97,6 +97,14 @@ JSON 结构如下：
   "caseAsset": {
     "caseName": "案例名称",
     "caseType": "案例类型",
+    "libraryMeta": {
+      "normalizedCaseType": "规范化案例类型",
+      "problemTags": ["责任不清 | 节点失控 | 成果不明 | 风险未识别 | 留痕不足 | 闭环不足"],
+      "abilityTags": ["全局视野 | 节点控制 | 责任判断 | 协同推进 | 闭环能力 | 风险识别 | 证据意识 | 复盘沉淀"],
+      "materialTags": ["会议纪要 | 责任节点表 | 催办记录 | 报审清单 | 归档清单"],
+      "trainingValue": "high | medium | low",
+      "contentValue": "high | medium | low"
+    },
     "exposedProblems": ["暴露问题"],
     "reusableTemplates": ["可复用模板"],
     "aiWorkflows": ["可形成 AI 工作流"],
@@ -104,7 +112,10 @@ JSON 结构如下：
       {
         "title": "成果标题",
         "usage": "适用场景",
-        "content": "可直接复制分享的完整文本"
+        "content": "可直接复制分享或复制到工作的完整文本",
+        "outputType": "meeting_notice | meeting_minutes | responsibility_table | reminder_record | reporting_brief | archive_checklist | review_checklist",
+        "copyLabel": "复制按钮文案",
+        "workScenario": "适用的真实工作场景"
       }
     ],
     "suitableForTraining": true,
@@ -120,7 +131,9 @@ JSON 结构如下：
 4. 必须指出用户当前推进方案的漏洞；
 5. 必须体现责任、节点、成果、风险、闭环、资料留痕；
 6. 能力评分必须有扣分原因；
-7. 案例沉淀必须提供至少 3 个 shareableOutputs，且 content 必须是可直接复制给同事或用于培训素材的完整文本；
-8. “可复用模板包”不能只列模板名称，必须按当前案例预填具体内容，至少包含问题修改清单、专题会议纪要、责任节点表、报审附件核对表、资料归档清单中的 3 类；
-9. 如果信息不足，也要基于现有信息做初步判断，同时指出信息缺口。`;
+7. caseAsset.libraryMeta 必须给出稳定标签，不要只复述 caseType；
+8. shareableOutputs 至少提供 7 项，其中至少包含 meeting_notice、meeting_minutes、responsibility_table、reminder_record、reporting_brief、archive_checklist、review_checklist 这 7 类 outputType；
+9. 每个 shareableOutputs 的 content 必须是可直接复制到真实工作中的完整文本，不允许只写“加强沟通”“持续跟进”“完善机制”等空泛建议；
+10. “可复用模板包”不能只列模板名称，必须按当前案例预填具体内容，至少包含问题修改清单、专题会议纪要、责任节点表、报审附件核对表、资料归档清单中的 3 类；
+11. 如果信息不足，也要基于现有信息做初步判断，同时指出信息缺口。`;
 }

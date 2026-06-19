@@ -97,6 +97,17 @@ export interface ActionPlan {
   closureMethod: string;
 }
 
+export type LibraryValueLevel = "high" | "medium" | "low";
+
+export interface CaseLibraryMeta {
+  normalizedCaseType: string;
+  problemTags: string[];
+  abilityTags: string[];
+  materialTags: string[];
+  trainingValue: LibraryValueLevel;
+  contentValue: LibraryValueLevel;
+}
+
 export interface CaseAsset {
   caseName: string;
   caseType: string;
@@ -104,6 +115,7 @@ export interface CaseAsset {
   reusableTemplates: string[];
   aiWorkflows: string[];
   shareableOutputs?: ShareableCaseOutput[];
+  libraryMeta?: CaseLibraryMeta;
   suitableForTraining: boolean;
   suitableForContent: boolean;
   desensitizationNotes?: string;
@@ -113,7 +125,39 @@ export interface ShareableCaseOutput {
   title: string;
   usage: string;
   content: string;
+  outputType?: ShareableOutputType;
+  copyLabel?: string;
+  workScenario?: string;
 }
+
+export type ShareableOutputType =
+  | "meeting_notice"
+  | "meeting_minutes"
+  | "responsibility_table"
+  | "reminder_record"
+  | "reporting_brief"
+  | "archive_checklist"
+  | "review_checklist";
+
+export type CaseQualityStatus = "pass" | "warning" | "fail";
+
+export interface CaseQualityCheck {
+  key: string;
+  label: string;
+  status: CaseQualityStatus;
+  score: number;
+  summary: string;
+  details: string[];
+}
+
+export interface CaseQualityReport {
+  overallStatus: CaseQualityStatus;
+  score: number;
+  checks: CaseQualityCheck[];
+  warnings: string[];
+}
+
+export type CaseReviewStatus = "unreviewed" | "approved" | "needs_edit";
 
 export interface SimulationRecord {
   id: string;
@@ -130,6 +174,7 @@ export interface SimulationRecord {
   abilityScore: AbilityScore;
   actionPlan: ActionPlan;
   caseAsset: CaseAsset;
+  reviewStatus?: CaseReviewStatus;
   createdAt: string;
 }
 
