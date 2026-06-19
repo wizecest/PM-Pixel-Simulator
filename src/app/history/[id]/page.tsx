@@ -10,7 +10,7 @@ import { PixelLayout } from "@/components/PixelLayout";
 import { CaseQualityPanel } from "@/components/CaseQualityPanel";
 import { SimulationResultView } from "@/components/SimulationResultView";
 import { auditCaseQuality } from "@/services/caseQualityService";
-import { downloadRecordMarkdown } from "@/services/exportService";
+import { downloadActionPack, downloadRecordMarkdown } from "@/services/exportService";
 import { getRecordById } from "@/services/storageService";
 import type { SimulationRecord } from "@/types/simulation";
 
@@ -67,6 +67,15 @@ export default function HistoryDetailPage() {
             <div className="mt-4 flex flex-wrap gap-3">
               <PixelButton type="button" variant="secondary" icon={<Download size={16} />} onClick={() => downloadRecordMarkdown(record)}>
                 导出 Markdown
+              </PixelButton>
+              <PixelButton
+                type="button"
+                variant="secondary"
+                icon={<Download size={16} />}
+                onClick={() => record.input && downloadActionPack(record.input, record)}
+                disabled={!record.input}
+              >
+                导出建议包 JSON
               </PixelButton>
             </div>
           </PixelCard>

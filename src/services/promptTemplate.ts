@@ -2,6 +2,23 @@ import type { GenerateSimulationParams } from "@/types/simulation";
 
 export function buildSimulationPrompt({ input, selectedScene, selectedRoles }: GenerateSimulationParams) {
   const roles = selectedRoles.map((role) => `${role.name}：${role.title}`).join("\n");
+  const snapshotContext = input.sourceSnapshot
+    ? `
+【只读项目快照】
+来源：${input.sourceSnapshot.source}
+快照版本：${input.sourceSnapshot.schemaVersion}
+项目 ID：${input.sourceSnapshot.projectId || "未填写"}
+生成时间：${input.sourceSnapshot.generatedAt || "未填写"}
+当前节点：${input.sourceSnapshot.currentNode || "未填写"}
+节点状态：${input.sourceSnapshot.nodeStatus || "未填写"}
+风险提示：${input.sourceSnapshot.riskNote || "未填写"}
+最近事件：
+${input.sourceSnapshot.latestEvents.length > 0 ? input.sourceSnapshot.latestEvents.map((item, index) => `${index + 1}. ${item}`).join("\n") : "未填写"}
+待办动作：
+${input.sourceSnapshot.pendingActions.length > 0 ? input.sourceSnapshot.pendingActions.map((item, index) => `${index + 1}. ${item}`).join("\n") : "未填写"}
+用户问题：${input.sourceSnapshot.userQuestion || "未填写"}
+`
+    : "";
 
   return `你是“PM Pixel Simulator”的项目管理推演引擎。
 
@@ -24,6 +41,7 @@ ${input.involvedParties || "未填写"}
 
 【用户当前推进方案】
 ${input.proposedAction}
+${snapshotContext}
 
 【选择场景】
 ${selectedScene.name}：${selectedScene.description}

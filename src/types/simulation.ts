@@ -18,7 +18,100 @@ export interface ScenarioInput {
   involvedParties?: string;
   proposedAction: string;
   trainingGoals?: string[];
+  sourceSnapshot?: ProjectSnapshotContext;
   createdAt: string;
+}
+
+export interface ProjectIssueSnapshot {
+  source: "pm-obsidian";
+  schema_version: "pm-pixel-snapshot/v1";
+  generated_at: string;
+  project_id: string;
+  project_name: string;
+  current_node: string;
+  node_status: string;
+  risk_note: string;
+  latest_events: string[];
+  pending_actions: string[];
+  evidence_links: string[];
+  user_question: string;
+}
+
+export interface ProjectSnapshotContext {
+  source: "pm-obsidian";
+  schemaVersion: "pm-pixel-snapshot/v1";
+  generatedAt: string;
+  projectId: string;
+  currentNode: string;
+  nodeStatus: string;
+  riskNote: string;
+  latestEvents: string[];
+  pendingActions: string[];
+  evidenceLinks: string[];
+  userQuestion: string;
+}
+
+export interface ProjectActionPack {
+  source: "pm-pixel-simulator";
+  schema_version: "pm-pixel-action-pack/v1";
+  project_id: string;
+  project_name: string;
+  management_gaps: string[];
+  role_challenges: string[];
+  recommended_actions: string[];
+  owner_suggestions: string[];
+  deadline_suggestions: string[];
+  evidence_needed: string[];
+  writeback_candidates: string[];
+}
+
+export interface ProjectDatabase {
+  source: "pm-obsidian";
+  schema_version: "pm-pixel-project-database/v1";
+  generated_at: string;
+  state_policy: {
+    truth_source: string;
+    writeback: string;
+    simulator_role: string;
+  };
+  source_layers: Array<{
+    name: string;
+    role: string;
+  }>;
+  project_count: number;
+  projects: ProjectDatabaseProject[];
+}
+
+export interface ProjectDatabaseProject {
+  project_id: string;
+  project_name: string;
+  project_type: string;
+  source_paths: Record<string, string>;
+  source_coverage: {
+    present: string[];
+    missing: string[];
+    status: string;
+  };
+  simulator_snapshot: ProjectIssueSnapshot;
+  current_state: {
+    current_node: string;
+    node_status: string;
+    risk_note: string;
+    assistant_state: string;
+    waiting_on: string;
+    next_action: string;
+    attention_level: string;
+  };
+  context: {
+    homepage_overview: string;
+    homepage_timeline: unknown[];
+    project_log_recent: string[];
+    event_ledger_recent: unknown[];
+    review_queue: unknown[];
+    readiness_gates: unknown[];
+    action_cards: unknown[];
+    commitment_cards: unknown[];
+  };
 }
 
 export interface Role {

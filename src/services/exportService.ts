@@ -1,5 +1,6 @@
 import { normalizeShareableOutputs } from "@/services/caseAssetService";
-import type { ActionItem, SimulationRecord } from "@/types/simulation";
+import { buildActionPack } from "@/services/snapshotBridge";
+import type { ActionItem, GenerateSimulationResponse, ScenarioInput, SimulationRecord } from "@/types/simulation";
 
 function safeFileName(value: string) {
   return value.replace(/[\\/:*?"<>|]/g, "-").replace(/\s+/g, "-").slice(0, 80);
@@ -174,6 +175,19 @@ export function downloadRecordMarkdown(record: SimulationRecord) {
   const link = document.createElement("a");
   link.href = url;
   link.download = `${safeFileName(record.caseAsset.caseName || record.levelName)}.md`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+
+export function downloadActionPack(input: ScenarioInput, result: GenerateSimulationResponse | SimulationRecord) {
+  const actionPack = buildActionPack(input, result);
+  const blob = new Blob([`${JSON.stringify(actionPack, null, 2)}\n`], { type: "application/json;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `${safeFileName(`${input.projectName || "pm-pixel"}-action-pack`)}.json`;
   document.body.appendChild(link);
   link.click();
   link.remove();

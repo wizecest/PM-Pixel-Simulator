@@ -23,6 +23,116 @@ v0.1.0 - MVP 跑通版
 → 导出单个案例素材
 ```
 
+## 与 E:\pm-obsidian 的只读数据衔接
+
+`E:\pm-obsidian` 仍然是唯一真实项目状态源。PM Pixel Simulator 只读取本地 JSON 数据库或单项目快照，不直接修改项目主页、项目日志、control-plane 或工作日志，也不做 Obsidian / 飞书同步。
+
+### 全量项目数据库
+
+推荐使用全量项目数据库，而不是逐个项目手工导入。
+
+数据库路径：
+
+```text
+E:\pm-obsidian\工作输出\04-工具模板\pm-pixel-database\pm-pixel-project-database.json
+```
+
+生成命令：
+
+```powershell
+cd E:\pm-obsidian
+py -3.14 scripts\python\export_pm_pixel_database.py
+```
+
+数据库 schema：
+
+```json
+{
+  "source": "pm-obsidian",
+  "schema_version": "pm-pixel-project-database/v1",
+  "generated_at": "",
+  "state_policy": {},
+  "source_layers": [],
+  "project_count": 0,
+  "projects": []
+}
+```
+
+每个项目内包含一个 `simulator_snapshot`，兼容下方单项目快照格式。
+
+使用流程：
+
+1. 在 `E:\pm-obsidian` 生成 `pm-pixel-project-database.json`；
+2. 在模拟器首页点击“导入项目数据库”；
+3. 选择上述 JSON 文件；
+4. 在页面中选择真实项目；
+5. 点击“用该项目开始模拟”；
+6. 生成推演后导出建议包 JSON。
+
+当前数据库读取的数据层：
+
+- control-plane：`graph.yaml`、`derived-state.yaml`、`events/*.yaml`；
+- 项目主页：项目元数据、项目概览、项目时间线；
+- 项目日志：近期项目流水。
+
+这些内容作为模拟器的只读上下文，不会被模拟器改写。
+
+### 单项目快照
+
+快照格式约定：
+
+```json
+{
+  "source": "pm-obsidian",
+  "schema_version": "pm-pixel-snapshot/v1",
+  "generated_at": "YYYY-MM-DDTHH:mm:ss+08:00",
+  "project_id": "",
+  "project_name": "",
+  "current_node": "",
+  "node_status": "",
+  "risk_note": "",
+  "latest_events": [],
+  "pending_actions": [],
+  "evidence_links": [],
+  "user_question": ""
+}
+```
+
+使用流程：
+
+1. 从 `E:\pm-obsidian` 生成或另存一个符合上述格式的项目问题快照 JSON；
+2. 在首页点击“导入项目快照”，选择本地 JSON 文件；
+3. 进入推演页后，页面会显示项目名称、当前节点、节点状态、风险、最近事件、待办动作和用户问题；
+4. 点击“生成推演”；
+5. 点击“导出建议包 JSON”，得到 `pm-pixel-action-pack/v1` 建议包；
+6. 建议包只作为人工确认材料，需要人工判断后再回到工程项目管理 AI 系统执行。
+
+仓库内提供脱敏样例：
+
+```text
+samples/pm-pixel-snapshot.sample.json
+```
+
+建议包格式：
+
+```json
+{
+  "source": "pm-pixel-simulator",
+  "schema_version": "pm-pixel-action-pack/v1",
+  "project_id": "",
+  "project_name": "",
+  "management_gaps": [],
+  "role_challenges": [],
+  "recommended_actions": [],
+  "owner_suggestions": [],
+  "deadline_suggestions": [],
+  "evidence_needed": [],
+  "writeback_candidates": []
+}
+```
+
+注意：`storage/simulation-records.json` 是模拟器历史案例库，不是项目真实状态源。导出建议包不会自动写回 `E:\pm-obsidian`。
+
 ## 启动方式
 
 ### 方式一：双击启动

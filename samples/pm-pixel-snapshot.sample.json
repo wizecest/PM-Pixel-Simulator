@@ -1,0 +1,25 @@
+{
+  "source": "pm-obsidian",
+  "schema_version": "pm-pixel-snapshot/v1",
+  "generated_at": "2026-06-19T10:30:00+08:00",
+  "project_id": "demo-tourism-001",
+  "project_name": "示例片区旅游基础配套项目",
+  "current_node": "可研修改稿报审前复核",
+  "node_status": "设计单位已收到修改意见，但正式成果稿仍未提交。",
+  "risk_note": "如本周内不能完成修改稿和附件复核，后续财评报审节点可能继续延误。",
+  "latest_events": [
+    "6 月 17 日财局反馈可研估算和建设内容需补充说明。",
+    "6 月 18 日项目组口头催办设计单位提交修改稿。",
+    "6 月 19 日仍未形成逐条修改清单和正式版本。"
+  ],
+  "pending_actions": [
+    "整理财局意见逐条修改清单。",
+    "明确设计单位正式修改稿提交时间。",
+    "同步核对报审附件和版本留痕。"
+  ],
+  "evidence_links": [
+    "obsidian://demo/projects/demo-tourism-001",
+    "obsidian://demo/logs/2026-06-19"
+  ],
+  "user_question": "这件事下一步应该如何压实责任并避免报审继续延误？"
+}
