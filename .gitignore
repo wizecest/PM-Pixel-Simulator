@@ -1,0 +1,10 @@
+.next/
+node_modules/
+out/
+dist/
+*.log
+*.tsbuildinfo
+.env*
+!.env.example
+storage/*.json
+!storage/.gitkeep

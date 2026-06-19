@@ -1,0 +1,30 @@
+[
+  {
+    "id": "project_meeting",
+    "name": "项目督导会议室",
+    "description": "适合模拟项目汇报、节点偏差、会议追问和决议销项。",
+    "suitableStages": ["planning", "feasibility", "scheme_design", "construction", "settlement", "other"],
+    "recommendedRoles": ["general_manager", "project_leader", "design_manager", "approval_manager", "archive_manager"]
+  },
+  {
+    "id": "design_dept",
+    "name": "设计管理部",
+    "description": "适合模拟设计成果质量、设计修改、设计变更和版本控制。",
+    "suitableStages": ["feasibility", "scheme_design", "preliminary_design", "construction_drawing"],
+    "recommendedRoles": ["project_leader", "design_manager", "consultant", "archive_manager"]
+  },
+  {
+    "id": "approval_window",
+    "name": "前期报批窗口",
+    "description": "适合模拟报批路径、政府沟通、资料附件和审批口径。",
+    "suitableStages": ["planning", "feasibility", "scheme_design", "preliminary_design"],
+    "recommendedRoles": ["project_leader", "approval_manager", "design_manager", "consultant"]
+  },
+  {
+    "id": "archive_room",
+    "name": "资料档案室",
+    "description": "适合模拟资料缺失、归档滞后、审计证据链和销项管理。",
+    "suitableStages": ["planning", "feasibility", "construction", "acceptance", "settlement", "other"],
+    "recommendedRoles": ["project_leader", "archive_manager", "general_manager"]
+  }
+]
