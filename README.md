@@ -1,5 +1,8 @@
 # PM Pixel Simulator
 
+> 第一次使用三系统联动，请先看：[`三系统统一工作流使用手册.md`](/E:/pm-obsidian/00_系统/三系统统一工作流使用手册.md)
+
+
 PM Pixel Simulator 是一个像素风格的工程项目管理角色模拟器。
 
 它用于把真实项目管理问题转成一次“项目关卡”，让用户从总经理、项目负责人、设计管理、前期报批、资料档案、服务单位等角色视角审视推进方案，并生成管理漏洞扫描、能力评分、通关方案和案例沉淀内容。
@@ -26,6 +29,27 @@ v0.1.0 - MVP 跑通版
 ## 与 E:\pm-obsidian 的只读数据衔接
 
 `E:\pm-obsidian` 仍然是唯一真实项目状态源。PM Pixel Simulator 只读取本地 JSON 数据库或单项目快照，不直接修改项目主页、项目日志、control-plane 或工作日志，也不做 Obsidian / 飞书同步。
+### 推荐：从 Nexus 一键进入
+
+当 Nexus 服务和 PM Pixel 开发服务同时运行时，可以不用手工选择 JSON：
+
+1. 在 `E:\pm-obsidian` 启动或刷新 Nexus，`export_project_dashboard.py` 会同步更新 PM Pixel 全量项目数据库；
+2. 打开 Nexus 单项目作战页，点击 `沙盘推演`；
+3. 浏览器跳转到 `http://127.0.0.1:3000/from-project?...`；
+4. PM Pixel 按项目 id/key/name 读取最新数据库，保存为当前推演输入并进入 `/simulate`；
+5. 推演完成后导出 `pm-pixel-action-pack/v1`，人工确认后再回工程项目管理 AI 系统执行。
+
+默认数据库路径：
+
+```text
+E:\pm-obsidian\工作输出\04-工具模板\pm-pixel-database\pm-pixel-project-database.json
+```
+
+如需改路径，在启动 PM Pixel 前设置：
+
+```powershell
+$env:PM_PIXEL_PROJECT_DATABASE_PATH = "E:\pm-obsidian\工作输出\04-工具模板\pm-pixel-database\pm-pixel-project-database.json"
+```
 
 ### 全量项目数据库
 
@@ -37,11 +61,18 @@ v0.1.0 - MVP 跑通版
 E:\pm-obsidian\工作输出\04-工具模板\pm-pixel-database\pm-pixel-project-database.json
 ```
 
-生成命令：
+生成命令（推荐通过 Nexus 刷新）：
 
 ```powershell
 cd E:\pm-obsidian
-py -3.14 scripts\python\export_pm_pixel_database.py
+python scripts\python\export_project_dashboard.py
+```
+
+只需要单独刷新模拟器数据库时，也可以运行：
+
+```powershell
+cd E:\pm-obsidian
+python scripts\python\export_pm_pixel_database.py
 ```
 
 数据库 schema：
@@ -60,7 +91,7 @@ py -3.14 scripts\python\export_pm_pixel_database.py
 
 每个项目内包含一个 `simulator_snapshot`，兼容下方单项目快照格式。
 
-使用流程：
+手工导入流程（备用）：
 
 1. 在 `E:\pm-obsidian` 生成 `pm-pixel-project-database.json`；
 2. 在模拟器首页点击“导入项目数据库”；

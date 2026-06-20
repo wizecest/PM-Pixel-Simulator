@@ -512,23 +512,29 @@ async function generateLiveSimulation(params: GenerateSimulationParams) {
     return undefined;
   }
 
-  const response = await fetch("/api/simulate", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(params),
-  });
+  try {
+    const response = await fetch("/api/simulate", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(params),
+    });
 
-  if (!response.ok) {
-    throw new Error("Live LLM simulation failed");
+    if (!response.ok) {
+      console.warn("Live LLM simulation failed; falling back to local rules.", await response.text());
+      return undefined;
+    }
+
+    const result = (await response.json()) as GenerateSimulationResponse;
+    return {
+      ...result,
+      simulationSource: "live_llm" as const,
+    };
+  } catch (error) {
+    console.warn("Live LLM simulation failed; falling back to local rules.", error);
+    return undefined;
   }
-
-  const result = (await response.json()) as GenerateSimulationResponse;
-  return {
-    ...result,
-    simulationSource: "live_llm" as const,
-  };
 }
 
 async function generateLocalSimulation({
