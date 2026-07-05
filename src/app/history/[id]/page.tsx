@@ -11,8 +11,29 @@ import { CaseQualityPanel } from "@/components/CaseQualityPanel";
 import { SimulationResultView } from "@/components/SimulationResultView";
 import { auditCaseQuality } from "@/services/caseQualityService";
 import { downloadActionPack, downloadRecordMarkdown } from "@/services/exportService";
-import { getRecordById } from "@/services/storageService";
+import { getRecordById, saveRecord } from "@/services/storageService";
+import { ensureDecisionFlightRecord, flightRecordToMarkdown } from "@/services/decisionFlightRecordService";
 import type { SimulationRecord } from "@/types/simulation";
+
+function DecisionFlightRecordPanel({ record, onSave }: { record: SimulationRecord; onSave: (r: SimulationRecord) => void }) {
+  const flight = ensureDecisionFlightRecord(record);
+
+  return (
+    <div className="grid gap-3 text-sm">
+      <p className="text-pixel-muted">用于记录：输入 → 推演 → 采纳 → 执行 → 反馈 → 升级</p>
+      <pre className="border-2 border-pixel-border bg-[#101822] p-3 text-xs">
+        {flightRecordToMarkdown(flight)}
+      </pre>
+      <PixelButton
+        type="button"
+        variant="secondary"
+        onClick={() => onSave({ ...record, flightRecord: flight })}
+      >
+        保存飞行记录
+      </PixelButton>
+    </div>
+  );
+}
 
 export default function HistoryDetailPage() {
   const params = useParams<{ id: string }>();
@@ -25,6 +46,11 @@ export default function HistoryDetailPage() {
       .then(setRecord)
       .finally(() => setLoading(false));
   }, [params.id]);
+
+  async function handleSave(next: SimulationRecord) {
+    await saveRecord(next);
+    setRecord(next);
+  }
 
   return (
     <PixelLayout>
@@ -47,41 +73,30 @@ export default function HistoryDetailPage() {
         <div className="grid gap-6">
           <PixelCard title="案例输入" eyebrow="RECORD">
             <div className="grid gap-3 text-sm md:grid-cols-2">
-              <p>
-                <span className="text-pixel-cyan">项目：</span>
-                {record.input?.projectName || "未填写项目名称"}
-              </p>
-              <p>
-                <span className="text-pixel-cyan">保存时间：</span>
-                {new Date(record.createdAt).toLocaleString("zh-CN")}
-              </p>
-              <p className="md:col-span-2">
-                <span className="text-pixel-cyan">问题：</span>
-                {record.input?.currentProblem || "未填写当前问题"}
-              </p>
-              <p className="md:col-span-2">
-                <span className="text-pixel-cyan">原方案：</span>
-                {record.input?.proposedAction || "未填写原方案"}
-              </p>
+              <p><span className="text-pixel-cyan">项目：</span>{record.input?.projectName}</p>
+              <p><span className="text-pixel-cyan">保存时间：</span>{new Date(record.createdAt).toLocaleString("zh-CN")}</p>
+              <p className="md:col-span-2"><span className="text-pixel-cyan">问题：</span>{record.input?.currentProblem}</p>
+              <p className="md:col-span-2"><span className="text-pixel-cyan">原方案：</span>{record.input?.proposedAction}</p>
             </div>
+
             <div className="mt-4 flex flex-wrap gap-3">
               <PixelButton type="button" variant="secondary" icon={<Download size={16} />} onClick={() => downloadRecordMarkdown(record)}>
                 导出 Markdown
               </PixelButton>
-              <PixelButton
-                type="button"
-                variant="secondary"
-                icon={<Download size={16} />}
-                onClick={() => record.input && downloadActionPack(record.input, record)}
-                disabled={!record.input}
-              >
+              <PixelButton type="button" variant="secondary" icon={<Download size={16} />} onClick={() => record.input && downloadActionPack(record.input, record)}>
                 导出建议包 JSON
               </PixelButton>
             </div>
           </PixelCard>
+
+          <PixelCard title="决策飞行记录仪" eyebrow="FLIGHT">
+            <DecisionFlightRecordPanel record={record} onSave={handleSave} />
+          </PixelCard>
+
           <PixelCard title="推演质量核查" eyebrow="QUALITY">
             <CaseQualityPanel report={auditCaseQuality(record)} />
           </PixelCard>
+
           <SimulationResultView result={record} />
         </div>
       )}
