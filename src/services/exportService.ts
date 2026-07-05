@@ -1,5 +1,6 @@
 import { normalizeShareableOutputs } from "@/services/caseAssetService";
 import { buildActionPack } from "@/services/snapshotBridge";
+import { flightRecordToMarkdown, ensureDecisionFlightRecord } from "@/services/decisionFlightRecordService";
 import type { ActionItem, GenerateSimulationResponse, ScenarioInput, SimulationRecord } from "@/types/simulation";
 
 function safeFileName(value: string) {
@@ -34,6 +35,8 @@ function shareableOutputs(record: SimulationRecord) {
 }
 
 export function recordToMarkdown(record: SimulationRecord) {
+  const flight = ensureDecisionFlightRecord(record);
+
   return `# ${record.caseAsset.caseName}
 
 ## 基本信息
@@ -53,6 +56,10 @@ export function recordToMarkdown(record: SimulationRecord) {
 ### 隐藏风险
 
 ${list(record.hiddenRisks)}
+
+## 决策飞行记录
+
+${flightRecordToMarkdown(flight)}
 
 ## 角色质疑
 
@@ -162,6 +169,10 @@ ${list(record.caseAsset.aiWorkflows)}
 ### 可直接分享成果
 
 ${shareableOutputs(record)}
+
+### 决策飞行记录
+
+${flightRecordToMarkdown(flight)}
 
 ### 脱敏建议
 
