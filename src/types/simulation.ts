@@ -65,6 +65,34 @@ export interface ProjectActionPack {
   writeback_candidates: string[];
 }
 
+export type DecisionFlightStepKey =
+  | "input_problem"
+  | "ai_simulation"
+  | "human_adoption"
+  | "real_execution"
+  | "reality_feedback"
+  | "judgment_upgrade"
+  | "case_asset";
+
+export type DecisionFlightStepStatus = "pending" | "in_progress" | "completed";
+
+export interface DecisionFlightRecordStep {
+  key: DecisionFlightStepKey;
+  label: string;
+  status: DecisionFlightStepStatus;
+  content: string;
+  evidence: string[];
+  updatedAt: string;
+}
+
+export interface DecisionFlightRecord {
+  schemaVersion: "pm-pixel-decision-flight-record/v1";
+  createdAt: string;
+  updatedAt: string;
+  steps: DecisionFlightRecordStep[];
+  nextReviewNote: string;
+}
+
 export interface ProjectDatabase {
   source: "pm-obsidian";
   schema_version: "pm-pixel-project-database/v1";
@@ -267,6 +295,7 @@ export interface SimulationRecord {
   abilityScore: AbilityScore;
   actionPlan: ActionPlan;
   caseAsset: CaseAsset;
+  flightRecord?: DecisionFlightRecord;
   reviewStatus?: CaseReviewStatus;
   createdAt: string;
 }
