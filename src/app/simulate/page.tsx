@@ -14,6 +14,7 @@ import { SimulationResultView } from "@/components/SimulationResultView";
 import { downloadActionPack } from "@/services/exportService";
 import { generateSimulation } from "@/services/simulationService";
 import { getCurrentInput, saveRecord } from "@/services/storageService";
+import { buildDecisionFlightRecord } from "@/services/decisionFlightRecordService";
 import type { GenerateSimulationResponse, Role, Scene, ScenarioInput, SimulationRecord } from "@/types/simulation";
 
 const roles = rolesData as Role[];
@@ -37,7 +38,7 @@ function getRecommendedRoleIds(scene: Scene) {
 }
 
 function createRecord(input: ScenarioInput, selectedSceneId: string, selectedRoleIds: string[], result: GenerateSimulationResponse): SimulationRecord {
-  return {
+  const base: SimulationRecord = {
     id: input.id,
     input,
     selectedSceneId,
@@ -53,6 +54,11 @@ function createRecord(input: ScenarioInput, selectedSceneId: string, selectedRol
     actionPlan: result.actionPlan,
     caseAsset: result.caseAsset,
     createdAt: new Date().toISOString(),
+  };
+
+  return {
+    ...base,
+    flightRecord: buildDecisionFlightRecord(base as any),
   };
 }
 
@@ -123,10 +129,7 @@ export default function SimulatePage() {
   }, []);
 
   const selectedScene = useMemo(() => scenes.find((scene) => scene.id === selectedSceneId) ?? scenes[0], [selectedSceneId]);
-  const selectedRoles = useMemo(
-    () => roles.filter((role) => selectedRoleIds.includes(role.id)),
-    [selectedRoleIds],
-  );
+  const selectedRoles = useMemo(() => roles.filter((role) => selectedRoleIds.includes(role.id)), [selectedRoleIds]);
 
   async function handleGenerate() {
     if (!input) {
@@ -144,11 +147,7 @@ export default function SimulatePage() {
     setLoading(true);
 
     try {
-      const nextResult = await generateSimulation({
-        input,
-        selectedScene,
-        selectedRoles,
-      });
+      const nextResult = await generateSimulation({ input, selectedScene, selectedRoles });
       setResult(nextResult);
     } catch (cause) {
       console.error(cause);
@@ -227,12 +226,7 @@ export default function SimulatePage() {
                   </PixelButton>
                 )}
                 {result && input && (
-                  <PixelButton
-                    type="button"
-                    variant="secondary"
-                    onClick={() => downloadActionPack(input, result)}
-                    icon={<Download size={18} />}
-                  >
+                  <PixelButton type="button" variant="secondary" onClick={() => downloadActionPack(input, result)} icon={<Download size={18} />}>
                     导出建议包 JSON
                   </PixelButton>
                 )}
