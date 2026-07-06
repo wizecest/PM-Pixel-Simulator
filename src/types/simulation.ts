@@ -252,6 +252,34 @@ export interface CaseQualityReport {
 
 export type CaseReviewStatus = "unreviewed" | "approved" | "needs_edit";
 
+export type DecisionFlightStepKey =
+  | "input_problem"
+  | "ai_simulation"
+  | "human_adoption"
+  | "real_execution"
+  | "reality_feedback"
+  | "judgment_upgrade"
+  | "case_asset";
+
+export type DecisionFlightStepStatus = "pending" | "in_progress" | "completed";
+
+export interface DecisionFlightRecordStep {
+  key: DecisionFlightStepKey;
+  label: string;
+  status: DecisionFlightStepStatus;
+  content: string;
+  evidence: string[];
+  updatedAt: string;
+}
+
+export interface DecisionFlightRecord {
+  schemaVersion: "pm-pixel-decision-flight-record/v1";
+  createdAt: string;
+  updatedAt: string;
+  steps: DecisionFlightRecordStep[];
+  nextReviewNote: string;
+}
+
 export interface SimulationRecord {
   id: string;
   input: ScenarioInput;
@@ -268,6 +296,7 @@ export interface SimulationRecord {
   actionPlan: ActionPlan;
   caseAsset: CaseAsset;
   reviewStatus?: CaseReviewStatus;
+  flightRecord?: DecisionFlightRecord;
   createdAt: string;
 }
 

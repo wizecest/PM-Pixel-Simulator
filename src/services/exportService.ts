@@ -1,4 +1,5 @@
 import { normalizeShareableOutputs } from "@/services/caseAssetService";
+import { ensureDecisionFlightRecord, flightRecordToMarkdown } from "@/services/decisionFlightRecordService";
 import { buildActionPack } from "@/services/snapshotBridge";
 import type { ActionItem, GenerateSimulationResponse, ScenarioInput, SimulationRecord } from "@/types/simulation";
 
@@ -34,6 +35,8 @@ function shareableOutputs(record: SimulationRecord) {
 }
 
 export function recordToMarkdown(record: SimulationRecord) {
+  const decisionFlightMarkdown = flightRecordToMarkdown(ensureDecisionFlightRecord(record));
+
   return `# ${record.caseAsset.caseName}
 
 ## 基本信息
@@ -43,6 +46,10 @@ export function recordToMarkdown(record: SimulationRecord) {
 - 原推进方案：${record.input.proposedAction}
 - 保存时间：${new Date(record.createdAt).toLocaleString("zh-CN")}
 - 推演来源：${record.simulationSource === "live_llm" ? "大模型接口" : "本地规则"}
+
+## 决策飞行记录
+
+${decisionFlightMarkdown}
 
 ## 关卡
 

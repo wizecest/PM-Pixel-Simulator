@@ -11,6 +11,7 @@ import { PixelLayout } from "@/components/PixelLayout";
 import { RoleSelector } from "@/components/RoleSelector";
 import { SceneSelector } from "@/components/SceneSelector";
 import { SimulationResultView } from "@/components/SimulationResultView";
+import { buildDecisionFlightRecord } from "@/services/decisionFlightRecordService";
 import { downloadActionPack } from "@/services/exportService";
 import { generateSimulation } from "@/services/simulationService";
 import { getCurrentInput, saveRecord } from "@/services/storageService";
@@ -37,7 +38,7 @@ function getRecommendedRoleIds(scene: Scene) {
 }
 
 function createRecord(input: ScenarioInput, selectedSceneId: string, selectedRoleIds: string[], result: GenerateSimulationResponse): SimulationRecord {
-  return {
+  const record: SimulationRecord = {
     id: input.id,
     input,
     selectedSceneId,
@@ -53,6 +54,11 @@ function createRecord(input: ScenarioInput, selectedSceneId: string, selectedRol
     actionPlan: result.actionPlan,
     caseAsset: result.caseAsset,
     createdAt: new Date().toISOString(),
+  };
+
+  return {
+    ...record,
+    flightRecord: buildDecisionFlightRecord(record),
   };
 }
 
